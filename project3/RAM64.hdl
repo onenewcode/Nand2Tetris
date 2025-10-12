@@ -1,0 +1,38 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/3/a/RAM64.hdl
+/**
+ * Memory of sixty four 16-bit registers.
+ * If load is asserted, the value of the register selected by
+ * address is set to in; Otherwise, the value does not change.
+ * The value of the selected register is emitted by out.
+ */
+CHIP RAM64 {
+    IN in[16], load, address[6];
+    OUT out[16];
+
+    PARTS:
+    // 第一步：将6位地址分为高3位和低3位
+    // 高3位(address[3..5])用于选择RAM8模块
+    // 低3位(address[0..2])用于在RAM8内部选择寄存器
+    
+    // 第二步：使用DMux8Way将load信号分配到对应的RAM8模块
+    DMux8Way(in=load, sel=address[3..5], a=load0, b=load1, c=load2, d=load3, 
+             e=load4, f=load5, g=load6, h=load7);
+    
+    // 第三步：实现8个RAM8模块，每个包含8个16位寄存器
+    RAM8(in=in, load=load0, address=address[0..2], out=ram0out);
+    RAM8(in=in, load=load1, address=address[0..2], out=ram1out);
+    RAM8(in=in, load=load2, address=address[0..2], out=ram2out);
+    RAM8(in=in, load=load3, address=address[0..2], out=ram3out);
+    RAM8(in=in, load=load4, address=address[0..2], out=ram4out);
+    RAM8(in=in, load=load5, address=address[0..2], out=ram5out);
+    RAM8(in=in, load=load6, address=address[0..2], out=ram6out);
+    RAM8(in=in, load=load7, address=address[0..2], out=ram7out);
+    
+    // 第四步：使用Mux8Way16根据高3位地址选择对应的RAM8模块输出
+    Mux8Way16(a=ram0out, b=ram1out, c=ram2out, d=ram3out, 
+              e=ram4out, f=ram5out, g=ram6out, h=ram7out, 
+              sel=address[3..5], out=out);
+}

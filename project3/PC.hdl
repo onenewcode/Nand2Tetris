@@ -1,0 +1,27 @@
+/**
+ * A 16-bit counter.
+ * if      reset(t): out(t+1) = 0
+ * else if load(t):  out(t+1) = in(t)
+ * else if inc(t):   out(t+1) = out(t) + 1
+ * else              out(t+1) = out(t)
+ */
+CHIP PC {
+    IN in[16], reset, load, inc;
+    OUT out[16];
+    
+    PARTS:
+    // 第一步：计算当前值+1（用于递增操作）
+    Inc16(in=current, out=incremented);
+    
+    // 第二步：根据inc信号选择是保持当前值还是递增
+    Mux16(a=current, b=incremented, sel=inc, out=incResult);
+    
+    // 第三步：根据load信号选择是使用上一步结果还是加载输入值
+    Mux16(a=incResult, b=in, sel=load, out=loadResult);
+    
+    // 第四步：根据reset信号选择是使用上一步结果还是重置为0
+    Mux16(a=loadResult, b[0]=false, b[1..15]=false, sel=reset, out=nextValue);
+    
+    // 第五步：使用寄存器存储当前状态，形成反馈循环
+    Register(in=nextValue, load=true, out=current, out=out);
+}
