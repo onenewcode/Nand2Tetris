@@ -19,6 +19,17 @@
  * CPU jumps to address 0 (i.e. pc is set to 0 in next time step) rather 
  * than to the address resulting from executing the current instruction. 
  */
+ /**
+ * Hack中央处理器（CPU）。
+ * 解析指令输入中的二进制代码，并根据Hack机器语言规范执行。
+ * 对于C指令，计算指令指定的函数。如果指令指定读取内存值，则inM输入应包含该值。
+ * 如果指令指定将值写入内存，则将outM输出设置为该值，将addressM输出设置为目标地址，
+ * 并断言writeM输出（当writeM=0时，outM可能输出任意值）。
+ * 如果reset输入为0，计算下一条指令的地址并将pc输出设置为该值。
+ * 如果reset输入为1，将pc设置为0。
+ * 注意：outM和writeM输出是组合逻辑：它们在当前周期受指令执行影响。
+ * addressM和pc输出是时序逻辑：虽然受指令执行影响，但只在下一个周期提交新值。
+ */
 
 CHIP CPU {
 

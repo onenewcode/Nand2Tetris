@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "vsc",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceRoot}/target/debug/project6",
+      "args": ["./tests/add/Add.asm","./R.hack"],
+      "cwd": "${workspaceRoot}",
+      "preLaunchTask": "rust: cargo build"
+    }
+  ]
+}
