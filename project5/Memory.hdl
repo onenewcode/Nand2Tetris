@@ -1,0 +1,59 @@
+
+/**
+ * Hack计算机完整的内存地址空间，
+ * 包括RAM和内存映射I/O。
+ * 该芯片支持读写操作，具体如下：
+ *     读操作：out(t) = Memory[address(t)](t)
+ *     写操作：如果 load(t-1)=1，则 Memory[address(t-1)](t) = in(t-1)
+ * 换句话说：芯片始终输出指定地址存储的值。
+ * 如果load=1，输入值将被加载到指定地址的内存位置。
+ * 从下一个时间步开始，这个值可以通过out输出获得。
+ * 
+ * 地址空间规则：
+ * 只使用内存芯片的上部16K+8K+1个字。
+ * 访问address>0x6000是无效的，读取值为0。
+ * 访问0x4000-0x5FFF范围内的任何地址将访问屏幕内存映射。
+ * 访问地址0x6000将访问键盘内存映射。
+ * 这些地址的行为在课程和书中给出的Screen和Keyboard芯片规范中有描述。
+ */
+
+CHIP Memory {
+    IN in[16], load, address[15];
+    OUT out[16];
+
+    PARTS:
+    // ========== 实现思路 ==========
+    // 1. 地址空间划分：
+    //    - 0x0000-0x3FFF: 16K RAM (使用address[0..13]作为14位地址)
+    //    - 0x4000-0x5FFF: 8K 屏幕内存映射 (使用address[0..12]作为13位地址)  
+    //    - 0x6000: 键盘内存映射 (不需要地址，只有一个寄存器)
+    //    - >0x6000: 无效地址，返回0
+    
+    // 2. 使用地址的高2位(address[13..14])作为选择信号：
+    //    - 00: RAM区域 (0x0000-0x3FFF)
+    //    - 01: RAM区域 (0x0000-0x3FFF)  
+    //    - 10: 屏幕区域 (0x4000-0x5FFF)
+    //    - 11: 键盘区域 (0x6000)
+    
+    // 3. 根据地址高2位将load信号分配到对应的内存组件
+    DMux4Way(in = load, sel = address[13..14], a = loadA, b = loadB, c = loadS, d = loadK);
+
+    // 4. 合并RAM区域的load信号（00和01都对应RAM）
+    //    因为16K RAM覆盖了前两个地址区域
+    Or(a = loadA, b = loadB, out = loadRam);
+    
+    // 5. 实例化各个内存组件：
+    //    - 16K RAM：使用低14位地址(address[0..13])
+    //    - Screen：使用低13位地址(address[0..12])  
+    //    - Keyboard：不需要地址输入
+    RAM16K(in = in, load = loadRam, address = address[0..13], out = outRam);
+    Keyboard(out = outK);
+    Screen(in = in, load = loadS, address = address[0..12], out = outS);
+    
+    // 6. 根据地址高2位选择对应的输出：
+    //    - 00: RAM输出
+    //    - 01: RAM输出  
+    //    - 10: 屏幕输出
+    //    - 11: 键盘输出
+    Mux4Way16(a = outRam, b = outRam, c = outS, d = outK, sel = address[13..14], out = out);
+}
