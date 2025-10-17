@@ -1,0 +1,15 @@
+[package]
+name = "projetc7"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[[bin]]
+name = "projetc7"
+path = "src/main.rs"
+
+[dev-dependencies]
+
+[profile.release]
+opt-level = 3
